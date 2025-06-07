@@ -43,98 +43,77 @@ end
 
 -- BYPASS FUNCTION
 function antiban()
-    gg.clearResults()
+function antiban()
+    -- قائمة الباصات
+    local bypasses = {
+        {lib = "libanogs.so", offset = 0x1423D8, value = "00 20 70 47"},
+        {lib = "libanogs.so", offset = 0x147638, value = "00 20 70 47"},
+        {lib = "libanogs.so", offset = 0x147270, value = "00 20 70 47"},
+        {lib = "libanogs.so", offset = 0x4BF5BC, value = "00 20 70 47"},
+        {lib = "libanogs.so", offset = 0x145D94, value = "00 20 70 47"},
+        {lib = "libanogs.so", offset = 0x13F4A8, value = "00 20 70 47"},
+        {lib = "libanogs.so", offset = 0x143A28, value = "00 20 70 47"},
+        {lib = "libanogs.so", offset = 0x147DCC, value = "00 20 70 47"},
+        {lib = "libanogs.so", offset = 0x351760, value = "00 20 70 47"},
+        {lib = "libanogs.so", offset = 0x393464, value = "00 20 70 47"},
+        {lib = "libanort.so", offset = 0x89B00,  value = "00 20 70 47"},
+        {lib = "libanort.so", offset = 0x155004, value = "00 20 70 47"},
+        {lib = "libanort.so", offset = 0x1556A8, value = "00 20 70 47"},
+        {lib = "libanort.so", offset = 0x89D50,  value = "00 20 70 47"},
+        {lib = "libanort.so", offset = 0xA3888,  value = "00 20 70 47"},
+        {lib = "libanort.so", offset = 0x1A7CE4, value = "00 20 70 47"},
+        {lib = "libanort.so", offset = 0x89B10,  value = "00 20 70 47"},
+        {lib = "libanort.so", offset = 0x109D2C, value = "00 20 70 47"},
+        {lib = "libanort.so", offset = 0x1CE5CC, value = "00 20 70 47"},
+        {lib = "libanort.so", offset = 0x89C30,  value = "00 20 70 47"},
+        {lib = "libanort.so", offset = 0x1B0E10, value = "00 20 70 47"},
+        {lib = "libanort.so", offset = 0x1B1748, value = "00 20 70 47"},
+        {lib = "libanort.so", offset = 0x89F60,  value = "00 20 70 47"},
+        {lib = "libanort.so", offset = 0x1B16DC, value = "00 20 70 47"},
+        {lib = "libanort.so", offset = 0x1C2498, value = "00 20 70 47"},
+        {lib = "libanort.so", offset = 0x89B30,  value = "00 20 70 47"},
+        {lib = "libanort.so", offset = 0x12FBD83, value = "00 20 70 47"},
+        {lib = "libanort.so", offset = 0x1B177C, value = "00 20 70 47"},
+        {lib = "libanort.so", offset = 0x89A60,  value = "00 20 70 47"},
+        {lib = "libanort.so", offset = 0x9CE90,  value = "00 20 70 47"},
+        {lib = "libanort.so", offset = 0x89FA0,  value = "00 20 70 47"},
+        {lib = "libanort.so", offset = 0xD9470,  value = "00 20 70 47"},
+        {lib = "libanort.so", offset = 0xDD5A0,  value = "00 20 70 47"},
+        {lib = "libanort.so", offset = 0x89BD0,  value = "00 20 70 47"},
+        {lib = "libanort.so", offset = 0xB7D40,  value = "00 20 70 47"},
+        {lib = "libanort.so", offset = 0x89EB0,  value = "00 20 70 47"},
+        {lib = "libanort.so", offset = 0x18F798, value = "00 20 70 47"},
+        {lib = "libanort.so", offset = 0x18F950, value = "00 20 70 47"},
+        {lib = "libanort.so", offset = 0x89C00,  value = "00 20 70 47"},
+        {lib = "libanort.so", offset = 0x899E0,  value = "00 20 70 47"},
+        {lib = "libanort.so", offset = 0x1A1A30, value = "00 20 70 47"},
+        {lib = "libanort.so", offset = 0x1A197C, value = "00 20 70 47"},
+        {lib = "libanort.so", offset = 0x89E90,  value = "00 20 70 47"}
+    }
 
-    -- تحديد النطاق للبحث في libanogs.so
-    gg.setRanges(gg.REGION_C_ALLOC)
-    gg.searchNumber("00 20 70 47", gg.TYPE_BYTE)
+    -- دالة لتحويل Hex String إلى DWORD (Endianness)
+    local function hexToDword(hex)
+        local bytes = {}
+        for byte in hex:gmatch("..") do
+            table.insert(bytes, tonumber(byte, 16))
+        end
+        return string.unpack("<I4", string.char(table.unpack(bytes)))
+    end
 
-    local res = gg.getResults(100)
-    local base_anogs = nil
-
-    for i, v in ipairs(res) do
-        if string.find(v.name or "", "libanogs.so") then
-            base_anogs = v.address - 0x147638 -- مثال: نأخذ أحد العناوين المعروفة
-            break
+    -- تطبيق الباصات
+    for i, bp in ipairs(bypasses) do
+        local baseAddr = gg.getSymbolAddress(bp.lib)
+        if baseAddr == 0 then
+            gg.toast("⚠️ "..bp.lib.." غير محملة")
+        else
+            local address = baseAddr + bp.offset
+            gg.setValues({
+                {address = address, flags = gg.TYPE_DWORD, value = hexToDword(bp.value)}
+            })
         end
     end
 
-    if base_anogs ~= nil then
-        gg.addListItems({
-            {address = base_anogs + 0x147638, flags = gg.TYPE_BYTE, value = "00 20 70 47"},
-            {address = base_anogs + 0x147270, flags = gg.TYPE_BYTE, value = "00 20 70 47"},
-            {address = base_anogs + 0x4BF5BC, flags = gg.TYPE_BYTE, value = "00 20 70 47"},
-            {address = base_anogs + 0x145D94, flags = gg.TYPE_BYTE, value = "00 20 70 47"},
-            {address = base_anogs + 0x13F4A8, flags = gg.TYPE_BYTE, value = "00 20 70 47"},
-            {address = base_anogs + 0x143A28, flags = gg.TYPE_BYTE, value = "00 20 70 47"},
-            {address = base_anogs + 0x147DCC, flags = gg.TYPE_BYTE, value = "00 20 70 47"},
-            {address = base_anogs + 0x4BF5BC, flags = gg.TYPE_BYTE, value = "00 20 70 47"},
-            {address = base_anogs + 0x351760, flags = gg.TYPE_BYTE, value = "00 20 70 47"},
-            {address = base_anogs + 0x393464, flags = gg.TYPE_BYTE, value = "00 20 70 47"},
-        })
-        gg.editAll("00 20 70 47", gg.TYPE_BYTE)
-        gg.toast("✅ BYPASS libanogs.so DONE")
-    else
-        gg.toast("❌ FAILED TO FIND libanogs.so BASE")
-    end
-
-    -- الآن لنفس العملية مع libanort.so
-    gg.setRanges(gg.REGION_C_ALLOC)
-    gg.searchNumber("00 20 70 47", gg.TYPE_BYTE)
-
-    local base_anort = nil
-    local res2 = gg.getResults(100)
-
-    for i, v in ipairs(res2) do
-        if string.find(v.name or "", "libanort.so") then
-            base_anort = v.address - 0x89B00
-            break
-        end
-    end
-
-    if base_anort ~= nil then
-        gg.addListItems({
-            {address = base_anort + 0x89B00, flags = gg.TYPE_BYTE, value = "00 20 70 47"},
-            {address = base_anort + 0x155004, flags = gg.TYPE_BYTE, value = "00 20 70 47"},
-            {address = base_anort + 0x1556A8, flags = gg.TYPE_BYTE, value = "00 20 70 47"},
-            {address = base_anort + 0x89D50, flags = gg.TYPE_BYTE, value = "00 20 70 47"},
-            {address = base_anort + 0xA3888, flags = gg.TYPE_BYTE, value = "00 20 70 47"},
-            {address = base_anort + 0x1A7CE4, flags = gg.TYPE_BYTE, value = "00 20 70 47"},
-            {address = base_anort + 0x89B10, flags = gg.TYPE_BYTE, value = "00 20 70 47"},
-            {address = base_anort + 0x109D2C, flags = gg.TYPE_BYTE, value = "00 20 70 47"},
-            {address = base_anort + 0x1CE5CC, flags = gg.TYPE_BYTE, value = "00 20 70 47"},
-            {address = base_anort + 0x89C30, flags = gg.TYPE_BYTE, value = "00 20 70 47"},
-            {address = base_anort + 0x1B0E10, flags = gg.TYPE_BYTE, value = "00 20 70 47"},
-            {address = base_anort + 0x1B1748, flags = gg.TYPE_BYTE, value = "00 20 70 47"},
-            {address = base_anort + 0x89F60, flags = gg.TYPE_BYTE, value = "00 20 70 47"},
-            {address = base_anort + 0x1B16DC, flags = gg.TYPE_BYTE, value = "00 20 70 47"},
-            {address = base_anort + 0x1C2498, flags = gg.TYPE_BYTE, value = "00 20 70 47"},
-            {address = base_anort + 0x89B30, flags = gg.TYPE_BYTE, value = "00 20 70 47"},
-            {address = base_anort + 0x12FBD83, flags = gg.TYPE_BYTE, value = "00 20 70 47"},
-            {address = base_anort + 0x1B177C, flags = gg.TYPE_BYTE, value = "00 20 70 47"},
-            {address = base_anort + 0x89A60, flags = gg.TYPE_BYTE, value = "00 20 70 47"},
-            {address = base_anort + 0x9CE90, flags = gg.TYPE_BYTE, value = "00 20 70 47"},
-            {address = base_anort + 0x89FA0, flags = gg.TYPE_BYTE, value = "00 20 70 47"},
-            {address = base_anort + 0xD9470, flags = gg.TYPE_BYTE, value = "00 20 70 47"},
-            {address = base_anort + 0xDD5A0, flags = gg.TYPE_BYTE, value = "00 20 70 47"},
-            {address = base_anort + 0x89BD0, flags = gg.TYPE_BYTE, value = "00 20 70 47"},
-            {address = base_anort + 0xB7D40, flags = gg.TYPE_BYTE, value = "00 20 70 47"},
-            {address = base_anort + 0x89EB0, flags = gg.TYPE_BYTE, value = "00 20 70 47"},
-            {address = base_anort + 0x18F798, flags = gg.TYPE_BYTE, value = "00 20 70 47"},
-            {address = base_anort + 0x18F950, flags = gg.TYPE_BYTE, value = "00 20 70 47"},
-            {address = base_anort + 0x89C00, flags = gg.TYPE_BYTE, value = "00 20 70 47"},
-            {address = base_anort + 0x18F798, flags = gg.TYPE_BYTE, value = "00 20 70 47"},
-            {address = base_anort + 0x18F950, flags = gg.TYPE_BYTE, value = "00 20 70 47"},
-            {address = base_anort + 0x899E0, flags = gg.TYPE_BYTE, value = "00 20 70 47"},
-            {address = base_anort + 0x1A1A30, flags = gg.TYPE_BYTE, value = "00 20 70 47"},
-            {address = base_anort + 0x1A197C, flags = gg.TYPE_BYTE, value = "00 20 70 47"},
-            {address = base_anort + 0x89E90, flags = gg.TYPE_BYTE, value = "00 20 70 47"},
-        })
-        gg.editAll("00 20 70 47", gg.TYPE_BYTE)
-        gg.toast("✅ BYPASS libanort.so DONE")
-    else
-        gg.toast("❌ FAILED TO FIND libanort.so BASE")
-    end
+    gg.toast("✅ bypass done!")
 end
 -- ESP LIST
 function list1()
